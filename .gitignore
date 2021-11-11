@@ -130,3 +130,6 @@ dmypy.json
 
 # Logs fle
 logs/
+
+# VS Code
+.vscode/
