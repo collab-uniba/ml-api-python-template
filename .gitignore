@@ -133,5 +133,3 @@ logs/
 
 # VS Code
 .vscode/
-/data
-/models
