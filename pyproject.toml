@@ -1,9 +1,18 @@
 [tool.poetry]
-name = "ml-api-python-template"
+name = "template"
 version = "0.1.0"
 description = "A template repository for AI/ML Python projects for models with an API"
 authors = ["Fabio Calefato <fabio.calefato@uniba.it>"]
 license = "MIT"
+
+[tool.poetry.scripts]
+preprocessing = "template.data.data:run"
+training = "template.models.train:run"
+
+packages = [
+    { include = "config", from = "." },
+    { include = "template", from = "." },
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -12,6 +21,7 @@ typer = "^0.4.0"
 rich = "^10.13.0"
 mlflow = "^1.21.0"
 fastapi = "^0.70.0"
+scikit-learn = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
@@ -24,7 +34,33 @@ great-expectations = "^0.13.41"
 pylint = "^2.11.1"
 mypy = "^0.910"
 bandit = "^1.7.0"
+autopep8 = "^1.6.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 99
+include = '\.pyi?$'
+exclude = '''
+/(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 99
+multi_line_output = 3
+include_trailing_comma = true
+skip_gitignore = true
