@@ -1,43 +1,32 @@
-"""[summary]
-
-Returns:
-    [type]: [description]
+""" Model training
 """
 
 from pathlib import Path
 from typing import Dict
 
 import pandas as pd
-from joblib import dump
 from sklearn import preprocessing
 from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
-from config.config import BASE_DIR, DATA_DIR, logger
+from config.config import DATA_DIR, MODELS_DIR, logger
+
+from ..utils import load_params, save_joblib, save_json
+from .eval import evaluation
 
 
-def prepare_dataset(
-    dataset: pd.DataFrame, test_size: int = 0.2, random_seed: int = 1234
-) -> Dict[str, pd.DataFrame]:
-    """[summary]
+def train(
+    dataset: Dict[str, pd.DataFrame], params: str, dataset_name: str = "winequality"
+) -> None:
+    """Train a model and save it to disk
 
     Args:
-        dataset (pd.DataFrame): [description]
-        test_size (int, optional): [description]. Defaults to 0.2.
-        random_seed (int, optional): [description]. Defaults to 1234.
+        dataset (Dict[str, pd.DataFrame]): The train and test sets.
+        params (Dict[str, object]): The parameters dictionary.
+        dataset_name (str, optional): The name of the dataset. Defaults to "winequality".
 
     Returns:
-        Dict[str, pd.DataFrame]: [description]
-    """
-    logger.info("Splliting dataset...")
-    train_df, test_df = train_test_split(dataset, test_size=test_size, random_state=random_seed)
-    return {"train": train_df, "test": test_df}
-
-
-def train(dataset: Dict) -> None:
-    """
-    Train a model and save it to disk
+        (object, json): The trained model and the evaluation results
     """
     train_df = dataset["train"]
     test_df = dataset["test"]
@@ -49,31 +38,71 @@ def train(dataset: Dict) -> None:
     x_test = test_df.drop("quality", axis=1)
 
     logger.info("Training model...")
-    scaler = preprocessing.StandardScaler().fit(x_train)
-    x_train = scaler.transform(x_train)
-    x_test = scaler.transform(x_test)
-    model = HistGradientBoostingRegressor(max_iter=50).fit(x_train, y_train)
+    scaler = preprocessing.StandardScaler().fit(x_train.values)
+    x_train = scaler.transform(x_train.values)
+    x_test = scaler.transform(x_test.values)
+
+    logger.info(f"Parameters: {params}")
+    model = HistGradientBoostingRegressor(max_iter=params["max_iter"], loss=params["loss"]).fit(
+        x_train, y_train
+    )
 
     y_pred = model.predict(x_test)
-    error = mean_squared_error(y_test, y_pred)
-    logger.info(f"Test MSE: {error}")
+    logger.info("Computing model evaluation metrics")
+    metrics = evaluation(y_test, y_pred)
 
-    logger.info("Saving artifacts...")
-    _path = Path(Path.joinpath(BASE_DIR, "artifacts"))
-    _path.mkdir(exist_ok=True)
-    dump(model, Path.joinpath(_path, "model.joblib"))
+    # logger.info("Saving artifacts...")
+    save_json(metrics, Path.joinpath(MODELS_DIR, "{}_performance.json".format(dataset_name)))
+    save_joblib(model, Path.joinpath(MODELS_DIR, "{}_model.joblib".format(dataset_name)))
+    save_joblib(scaler, Path.joinpath(MODELS_DIR, "{}_scaler.joblib".format(dataset_name)))
 
-    logger.info("Done!")
+    return model, metrics
 
 
-def run():
+def split_dataset(
+    dataset: pd.DataFrame, split_ratio: int = 0.2, random_seed: int = 1234
+) -> Dict[str, pd.DataFrame]:
+    """Split the dataset into train and test sets.
+
+    Args:
+        dataset (pd.DataFrame): The dataset to split
+        split_ratio (int, optional): The train/test split ratio. Defaults to 0.2.
+        random_seed (int, optional): The random seed to ensure replicability. Defaults to 1234.
+
+    Returns:
+        Dict[str, pd.DataFrame]: A dictionary containing the train and test sets.
+    """
+    logger.info("Splliting the 80/20 train/test datasets...")
+    train_df, test_df = train_test_split(dataset, test_size=split_ratio, random_state=random_seed)
+    return {"train": train_df, "test": test_df}
+
+
+def load_dataset(ds_file: str) -> pd.DataFrame:
+    """
+    Load the cleaned dataset
+
+    Args:
+        ds_file (str): The path to the preprocessed dataset
+
+    Returns:
+        pd.DataFrame: The loaded dataset
+    """
+    logger.info("Loading the dataset...")
+    return pd.read_csv(ds_file)
+
+
+def run(
+    dataset_file: str = Path.joinpath(DATA_DIR, "processed", "winequality_clean.csv"),
+    params_file: str = Path.joinpath(MODELS_DIR, "params.json").read_text(),
+):
     """
     Run the training process
     """
-    logger.info("Loading dataset...")
-    dataset = pd.read_csv(Path.joinpath(DATA_DIR, "processed", "wine_quality_preprocessed.csv"))
-    train_test = prepare_dataset(dataset)
-    train(train_test)
+    dataset = load_dataset(dataset_file)
+    train_test = split_dataset(dataset)
+    params = load_params(params_file)
+    res = train(train_test, params)
+    return res
 
 
 if __name__ == "__main__":
