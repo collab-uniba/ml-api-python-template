@@ -133,3 +133,5 @@ logs/
 
 # VS Code
 .vscode/
+
+.install.stamp
