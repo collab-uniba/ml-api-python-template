@@ -1,6 +1,10 @@
+"""Utility methods for data loading and saving.
+"""
+
 import json
 import pathlib
-from typing import Dict
+
+import joblib
 
 from config.config import logger
 
@@ -16,10 +20,10 @@ def save_json(data: object, path: pathlib.Path):
         None
     """
     try:
-        with open(path, "w") as f:
-            json.dump(data, f, indent=4, sort_keys=True)
-    except Exception as e:
-        logger.error(e)
+        with open(path, "w", encoding="utf-8") as _file:
+            json.dump(data, _file, indent=4, sort_keys=True)
+    except Exception as exc:
+        logger.error(exc)
 
 
 def save_joblib(data, path):
@@ -33,11 +37,9 @@ def save_joblib(data, path):
         None
     """
     try:
-        import joblib
-
         joblib.dump(data, path)
-    except Exception as e:
-        logger.error(e)
+    except Exception as exc:
+        logger.error(exc)
 
 
 def load_params(path: str) -> json:

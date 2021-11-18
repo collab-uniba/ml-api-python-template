@@ -13,7 +13,6 @@ from template import utils
 from template.data import data
 from template.models import train
 
-
 # Ignore warning
 warnings.filterwarnings("ignore")
 # Typer CLI app
@@ -30,8 +29,10 @@ def train_model(
     """Train a model using the specified parameters.
 
     Args:
-        params_fp (Path, optional): Parameters to use for training. Defaults to `config/params.json`.
-        experiment_name (str, optional): Name of the experiment to save the run to. Defaults to `best`.
+        params_fp (Path, optional): Parameters to use for training.
+                                    Defaults to `config/params.json`.
+        experiment_name (str, optional): Name of the experiment to save the run to.
+                                         Defaults to `best`.
         run_name (str, optional): Name of the run. Defaults to `model`.
 
     Returns:
@@ -44,7 +45,7 @@ def train_model(
     mlflow.set_experiment(experiment_name=experiment_name)
     with mlflow.start_run(run_name=run_name):
         run_id = mlflow.active_run().info.run_id
-        logger.info(f"Run ID: {run_id}")
+        logger.info("Run ID: %s", run_id)
 
         # Data preparation
         logger.info("Preparing data...")
@@ -74,12 +75,12 @@ def train_model(
         # Log metrics
         mlflow.log_metrics(artifacts["metrics"])
         # Log artifacts
-        with tempfile.TemporaryDirectory() as dp:
-            utils.save_json(artifacts["params"], Path(dp, "params.json"))
-            utils.save_json(artifacts["metrics"], Path(dp, "performance.json"))
-            utils.save_json(artifacts["features"], Path(dp, "features.json"))
-            utils.save_joblib(artifacts["model"], Path(dp, "model.joblib"))
-            mlflow.log_artifacts(dp)
+        with tempfile.TemporaryDirectory() as tempdir:
+            utils.save_json(artifacts["params"], Path(tempdir, "params.json"))
+            utils.save_json(artifacts["metrics"], Path(tempdir, "performance.json"))
+            utils.save_json(artifacts["features"], Path(tempdir, "features.json"))
+            utils.save_joblib(artifacts["model"], Path(tempdir, "model.joblib"))
+            mlflow.log_artifacts(tempdir)
 
         logger.info("Logging model to MLflow registry")
         mlflow.sklearn.log_model(artifacts["model"], "HistGradientBoostingRegressor")

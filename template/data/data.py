@@ -3,7 +3,6 @@ Train a scikit-learn model on UCI Wine Quality Dataset
 https://archive.ics.uci.edu/ml/datasets/wine+quality
 """
 
-import json
 from pathlib import Path
 
 import pandas as pd
@@ -49,14 +48,14 @@ def clean_dataset(raw_dataset: pd.DataFrame, dataset_name: str = "dataset") -> p
     logger.info("Updated datframe description")
     print(dataset.describe())  # TODO move to reports?
 
-    _path = Path.joinpath(DATA_DIR, "processed", "{}_clean.csv".format(dataset_name))
+    _path = Path.joinpath(DATA_DIR, "processed", f"{dataset_name}_clean.csv")
     dataset.to_csv(_path, index=False)
     logger.info(
         "Preprocessed dataset saved to: %s",
         _path,
     )
 
-    _path = Path.joinpath(MODELS_DIR, "{}_features.json".format(dataset_name))
+    _path = Path.joinpath(MODELS_DIR, f"{dataset_name}_features.json")
     save_json(get_features(dataset), _path)
     logger.info(
         "Features saved to: %s",

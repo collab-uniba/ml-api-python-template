@@ -42,7 +42,7 @@ def train(
     x_train = scaler.transform(x_train.values)
     x_test = scaler.transform(x_test.values)
 
-    logger.info(f"Parameters: {params}")
+    logger.info("Parameters: %s", params)
     model = HistGradientBoostingRegressor(max_iter=params["max_iter"], loss=params["loss"]).fit(
         x_train, y_train
     )
@@ -52,9 +52,9 @@ def train(
     metrics = evaluation(y_test, y_pred)
 
     # logger.info("Saving artifacts...")
-    save_json(metrics, Path.joinpath(MODELS_DIR, "{}_performance.json".format(dataset_name)))
-    save_joblib(model, Path.joinpath(MODELS_DIR, "{}_model.joblib".format(dataset_name)))
-    save_joblib(scaler, Path.joinpath(MODELS_DIR, "{}_scaler.joblib".format(dataset_name)))
+    save_json(metrics, Path.joinpath(MODELS_DIR, f"{dataset_name}_performance.json"))
+    save_joblib(model, Path.joinpath(MODELS_DIR, f"{dataset_name}_model.joblib"))
+    save_joblib(scaler, Path.joinpath(MODELS_DIR, f"{dataset_name}_scaler.joblib"))
 
     return model, metrics
 
