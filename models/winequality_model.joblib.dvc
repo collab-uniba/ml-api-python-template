@@ -1,0 +1,4 @@
+outs:
+- md5: 34bc42318ed3c83a72eb18b81cf40ebd
+  size: 340370
+  path: winequality_model.joblib

@@ -1,0 +1,4 @@
+outs:
+- md5: b413adbd2192d92d2ad0e988fa5e34c5
+  size: 752
+  path: winequality_scaler.joblib
